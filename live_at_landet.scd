@@ -59,7 +59,9 @@
         harshBuffer = Buffer.read(s, File.getcwd +/+ "media/electricity.aif");
 
 
-        oscProcessing = NetAddr.new("192.168.2.2", 7771); // raspi ip 192.168.2.2
+        oscProcessing = NetAddr.new("localhost", 7771); // raspi ip 192.168.2.2
+
+        //////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
 
         //SYNTH DEFS
         //WAVETABLE (interpolating)
@@ -113,6 +115,8 @@
             Out.ar(out_bus, panner*gate);
         }).add;
 
+        //////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
+
         //PBINDS
         Pbindef.new(\sequencer,
            \instrument, \sliceBuffer,
@@ -130,6 +134,8 @@
         );
 
         s.sync; //wait for Synthdef and buffers...
+
+        //////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
 
         sourceGroup = Group.new;
         fxGroup = Group.after;
@@ -168,26 +174,18 @@
                 112, {
                     //DIABETES SYNTH
                     if(leftDiabetes.isPlaying() == false,
-                       {
-                            leftDiabetes = Synth.new(\diabetes, [\velocity, 10, \pan, diabetesLeftBus, \freq, 70,\buf, 5, \detuneFactor, 1.0]).register(true);
-                       }
+                       {leftDiabetes = Synth.new(\diabetes, [\velocity, 10, \pan, diabetesLeftBus, \freq, 70,\buf, 5, \detuneFactor, 1.0]).register(true);}
                     );
                     if(rightDiabetes.isPlaying() == false,
-                       {
-                            rightDiabetes = Synth.new(\diabetes, [\velocity, 10, \freq, 80, \buf, 0, \pan, diabetesRightBus, \detuneFactor, 0.9]).register(true);
-                       }
+                        {rightDiabetes = Synth.new(\diabetes, [\velocity, 10, \freq, 80, \buf, 0, \pan, diabetesRightBus, \detuneFactor, 0.9]).register(true);}
                     );
                 },
                 113, {
                     if(leftDiabetes.isPlaying(),
-                       {
-                           leftDiabetes.free;
-                       }
+                        {leftDiabetes.free;}
                     );
                     if(rightDiabetes.isPlaying(),
-                       {
-                           rightDiabetes.free;
-                       }
+                        {rightDiabetes.free;}
                     );
                    //TRIGGER OSC SHIFT OF SCENE
                 },
@@ -196,7 +194,6 @@
                     harshNoise = Synth(\gatedBuffer, [ \bufnum, harshBuffer, \out_buffer, harshBus]);
                 },
                 115, {
-                    //HARSH NOISE
                     harshNoise.free;
                 }
             );
@@ -244,9 +241,3 @@ Pbindef(\sequencer).play;
 
 OSCFunc.trace(false)
 MIDIdef.freeAll;
-
-x = Synth(\diabetes).register(true);
-x.register(true);
-s.queryAllNodes.postln;
-x.isPlaying()
-x.free
