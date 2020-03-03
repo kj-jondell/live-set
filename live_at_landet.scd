@@ -2,7 +2,7 @@
 * TODO: 1. ControlBus controll detuning
 * 4. general cleanup
 ****** a) renaming variables...
-* 5. create git
+* 4.5 break into several sc-files...
 * 10. outputs???
 *
 * ® Karl Johannes Jondell
@@ -15,6 +15,8 @@
     MIDIIn.connectAll;
 
     s.waitForBoot({
+        ///////////////////////////////////VARIABLES\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
+
         //Bus declarations
         var noiseLeftBus = 23, noiseRightBus = 24, moireBassRightBus = 8, moireBassLeftBus = 9, moireLeftBus = 6, moireRightBus = 7, diabetesLeftBus = 0, diabetesRightBus = 1, harshBus = 2, drumMachineBus = 4;
 
@@ -22,7 +24,7 @@
         var oscProcessing;
 
         //Diabetes variable declarations
-        var leftDiabetes, rightDiabetes; //= Synth.basicNew(\diabetes), rightDiabetes = Synth.basicNew(\diabetes);
+        var leftDiabetes, rightDiabetes; 
         //order wavetable-buffers from low to hi spectral centroid frequency
         var order = #[17, 2, 19, 4, 9, 22, 13, 20, 23, 12, 24, 8, 18, 5, 0, 16, 7, 3, 10, 6, 1, 27, 14, 21, 26, 28, 11, 29, 25, 15]; //spectral centroid ordered from low to hi
         var buffers = Array.new(order.size);
@@ -41,8 +43,9 @@
         var harshNoise, harshBuffer;
 
         //Noise drum machine variable declarations
-        var slices = SoundFile.collectIntoBuffers(File.getcwd +/+ "media/normalized/*"); //Normalized buffers (!)
+        var slices; //Normalized buffers (!)
 
+        //TODO: RENAME FOLLOWING VARIABLES....
         var choices = [1,4,9,16,25].normalizeSum;
         var durations = [1/9, 3/16, 3/24, 1/7, 1/8];
         //var durations = [1/18,1/1,1/9];
@@ -57,13 +60,14 @@
             buffers.add(Buffer.read(s, path: url, numFrames: 2048, bufnum: count));
         });
         harshBuffer = Buffer.read(s, File.getcwd +/+ "media/electricity.aif");
+        slices = SoundFile.collectIntoBuffers(File.getcwd +/+ "media/normalized/*", s);
 
+        s.sync; // Wait for buffers to load...
 
         oscProcessing = NetAddr.new("localhost", 7771); // raspi ip 192.168.2.2
 
-        //////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
+        ///////////////////////////////////SYNTH DEFS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
 
-        //SYNTH DEFS
         //WAVETABLE (interpolating)
         //TODO: controlbus for detuning AND buffernr
         //Vosc3 for detuning (?)
@@ -100,7 +104,7 @@
         }).add;
 
         SynthDef.new(\sliceBuffer, {
-            arg bufnum, rate = 1, pan = 0, out_bus = 0;
+            arg bufnum = 0, rate = 1, pan = 0, out_bus = 0;
             var signal = PlayBuf.ar(2, bufnum, rate*BufRateScale.kr(bufnum), doneAction:Done.freeSelf);
             var panner = Pan2.ar(in: signal,  pos: pan, level: 0.5);
             Out.ar(out_bus, panner);
@@ -115,19 +119,22 @@
             Out.ar(out_bus, panner*gate);
         }).add;
 
-        //////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
+        ///////////////////////////////////PBINDS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
 
-        //PBINDS
         Pbindef.new(\sequencer,
            \instrument, \sliceBuffer,
            \rate, Pfunc({rates.choose}),
-           \bufnum, Pfunc({slices[(subAmt.rand+offset)%slices.size].bufnum;}),
+           \bufnum, Pfunc({slices[offset..(subAmt+offset)%slices.size].choose.bufnum;}),
            \dur, Pfunc({durations.wchoose(choices[0..durations.size-1]);}),
            \bla, Pfunc { |e| oscProcessing.sendMsg("/dur", e[\rate] ) },
            \add, Pfunc { fork{
-                harshNoise.set(\gate_level,-0.001); // TODO: maybe design some other way
-                0.5.wait;
-                harshNoise.set(\gate_level,0.25);
+               if(harshNoise.isPlaying(),{
+                       harshNoise.set(\gate_level,-0.001); // TODO: maybe design some other way (and change parameter names...)
+                       0.5.wait;
+               });
+               if(harshNoise.isPlaying(),{
+                       harshNoise.set(\gate_level,0.25);
+               });
             }},
             \out_bus, drumMachineBus,
            \pan, Pwhite(-0.5,0.5,inf)
@@ -135,7 +142,7 @@
 
         s.sync; //wait for Synthdef and buffers...
 
-        //////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
+        ///////////////////////////////////SYNTH GENS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
 
         sourceGroup = Group.new;
         fxGroup = Group.after;
@@ -144,7 +151,8 @@
         leftNoise = Synth.new(\noise, [\out, noiseLeftBus], sourceGroup);
         rightNoise = Synth.new(\noise, [\out, noiseRightBus], sourceGroup);
 
-        //MIDI definitions
+        ///////////////////////////////////MIDI DEFINITIONS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
+
         //check if left/right diabetes synths are initilized
         MIDIFunc.cc({|val,num|
             oscProcessing.sendMsg("/terrainHeight", val);
@@ -171,7 +179,7 @@
 
         MIDIFunc.noteOn({arg val, num;
             switch(num,
-                112, {
+                64, {
                     //DIABETES SYNTH
                     if(leftDiabetes.isPlaying() == false,
                        {leftDiabetes = Synth.new(\diabetes, [\velocity, 10, \pan, diabetesLeftBus, \freq, 70,\buf, 5, \detuneFactor, 1.0]).register(true);}
@@ -180,7 +188,7 @@
                         {rightDiabetes = Synth.new(\diabetes, [\velocity, 10, \freq, 80, \buf, 0, \pan, diabetesRightBus, \detuneFactor, 0.9]).register(true);}
                     );
                 },
-                113, {
+                65, {
                     if(leftDiabetes.isPlaying(),
                         {leftDiabetes.free;}
                     );
@@ -189,12 +197,25 @@
                     );
                    //TRIGGER OSC SHIFT OF SCENE
                 },
-                114, {
-                    //HARSH NOISE
-                    harshNoise = Synth(\gatedBuffer, [ \bufnum, harshBuffer, \out_buffer, harshBus]);
+                66, {
+                    if(harshNoise.isPlaying() == false,
+                        {harshNoise = Synth(\gatedBuffer, [ \bufnum, harshBuffer, \out_buffer, harshBus]).register(true);}
+                    );
                 },
-                115, {
-                    harshNoise.free;
+                67, {
+                    if(harshNoise.isPlaying(),
+                        {harshNoise.free;}
+                    );
+                },
+                96, {
+                    if(Pbindef(\sequencer).isPlaying() == false,
+                        {Pbindef(\sequencer).play(quant:0);}
+                    );
+                },
+                97, {
+                    if(Pbindef(\sequencer).isPlaying(),
+                        {Pbindef(\sequencer).pause;}
+                    );
                 }
             );
         }, chan: 0);
@@ -224,10 +245,6 @@
 )
 /// SERVER FUNCTIONS
 s.queryAllNodes();
-s.addr
-s.meter;
-s.scope;
-s.freeAll;
 
 s.boot;
 s.reboot;
@@ -237,7 +254,8 @@ s.stopRecording;
 s.scope;
 
 //FREEING AND PLAYING WITH MIDI
-Pbindef(\sequencer).play;
+Pbindef(\sequencer).pause;
+Pbindef(\sequencer).isPlaying();
 
 OSCFunc.trace(false)
 MIDIdef.freeAll;
