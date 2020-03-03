@@ -4,7 +4,9 @@
 ****** a) renaming variables...
 * 4.5 break into several sc-files...
 * 10. outputs???
-*
+* 
+* - MIDI drum machine
+* - MIDI harshNoise
 * ® Karl Johannes Jondell
 */
 
@@ -16,6 +18,15 @@
 
     s.waitForBoot({
         ///////////////////////////////////VARIABLES\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
+        var launchPad = MIDIOut.newByName("Launchpad Mini", "Launchpad Mini", false);
+        var onPads = #[64,66,96], offPads = #[65,67,97];
+        var padStates = [0,0,0];
+        var onColor = 120, offColor = 122, stopBlink = 11, stopRest = 13;
+        var blinkPad = {arg midi;
+            launchPad.noteOn(0, midi, stopBlink);
+            0.05.wait;
+            launchPad.noteOn(0, midi, stopRest);
+        };
 
         //Bus declarations
         var noiseLeftBus = 23, noiseRightBus = 24, moireBassRightBus = 8, moireBassLeftBus = 9, moireLeftBus = 6, moireRightBus = 7, diabetesLeftBus = 0, diabetesRightBus = 1, harshBus = 2, drumMachineBus = 4;
@@ -31,7 +42,6 @@
 
         //Moiré variable declarations
         var leftNoise, rightNoise, moireSynth, moireBassSynth;
-        var createdSynth = False, createdBassSynth = False;
         var sourceGroup, fxGroup;
         var customScale = {
             arg note, root = 29, tuning = 45;
@@ -53,16 +63,29 @@
         //var rates = rates++(1/rates[1..]);
         var subAmt = 88, offset = 16;
 
+        var resetPads = {
+            onPads.do({
+                arg val, index; 
+                launchPad.noteOn(0, val, if(padStates[index] == 1, {onColor}, {offColor}));
+            });
+            (offPads++[99]).do({
+                arg val; 
+                launchPad.noteOn(0, val, stopRest);
+            });
+        };
+
+        resetPads.value();
         //Load buffers
+        Buffer.freeAll(s);
         order.do({
             arg index, count;
             var url = format("/Users/kj/Documents/school/supercollider/projects/diabetes/samples/wavetable2048/blodsocker%.wav", index+1);
-            buffers.add(Buffer.read(s, path: url, numFrames: 2048, bufnum: count));
+            buffers.add(Buffer.read(s, path: url, numFrames: 2048));
         });
-        harshBuffer = Buffer.read(s, File.getcwd +/+ "media/electricity.aif");
+        harshBuffer = Buffer.read(s, path: File.getcwd +/+ "media/electricity.aif");
         slices = SoundFile.collectIntoBuffers(File.getcwd +/+ "media/normalized/*", s);
 
-        s.sync; // Wait for buffers to load...
+        s.sync;
 
         oscProcessing = NetAddr.new("localhost", 7771); // raspi ip 192.168.2.2
 
@@ -154,33 +177,63 @@
         ///////////////////////////////////MIDI DEFINITIONS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
 
         //check if left/right diabetes synths are initilized
-        MIDIFunc.cc({|val,num|
-            oscProcessing.sendMsg("/terrainHeight", val);
-            oscProcessing.sendMsg("/flySpeed", val.linlin(0,127,0,1));
+        MIDIFunc.cc({arg val, num;
+            switch(num,
+                16, {
+                    oscProcessing.sendMsg("/terrainHeight", val);
+                    oscProcessing.sendMsg("/flySpeed", val.linlin(0,127,0,1));
 
-            if(leftDiabetes.isPlaying(),
-                {
-                    leftDiabetes.set(\freq,val.linexp(0,127,70,110)); 
-                    leftDiabetes.set(\buf,val.linlin(0,127,5,28)); 
-                    leftDiabetes.set(\velocity,val.linexp(0,127,10,120)); 
-                    leftDiabetes.set(\detuneFactor, val.linlin(0,127,1.0,0));
+                    if(leftDiabetes.isPlaying(),
+                    {
+                        leftDiabetes.set(\freq,val.linexp(0,127,70,110)); 
+                        leftDiabetes.set(\buf,val.linlin(0,127,5,28)); 
+                        leftDiabetes.set(\velocity,val.linexp(0,127,10,120)); 
+                        leftDiabetes.set(\detuneFactor, val.linlin(0,127,1.0,0));
+                    }
+                    );
+
+                    if(rightDiabetes.isPlaying(),
+                    {
+                        rightDiabetes.set(\detuneFactor, val.linlin(0,127,0.9,0));
+                        rightDiabetes.set(\velocity,val.linexp(0,127,10,120)); 
+                        rightDiabetes.set(\freq,val.linexp(0,127,80,110)); 
+                        rightDiabetes.set(\buf,val.linlin(0,127,0,28)); 
+                    }
+                    );
+                },
+                18, {
+                    if(moireBassSynth.isPlaying(),
+                        {moireBassSynth.set(\detune, val.linlin(0,127,1,5);)}
+                    );
+                    if(moireSynth.isPlaying(),
+                        {moireSynth.set(\detune, val.linlin(0,127,1,5);)}
+                    );
                 }
             );
-
-            if(rightDiabetes.isPlaying(),
-                {
-                    rightDiabetes.set(\detuneFactor, val.linlin(0,127,0.9,0));
-                    rightDiabetes.set(\velocity,val.linexp(0,127,10,120)); 
-                    rightDiabetes.set(\freq,val.linexp(0,127,80,110)); 
-                    rightDiabetes.set(\buf,val.linlin(0,127,0,28)); 
-                }
-            );
-        }, ccNum: 16);
+        });
 
         MIDIFunc.noteOn({arg val, num;
+            /// LIGHT UP LAUNCHPAD
+            onPads.do({
+                arg val, ind;
+                if(num == val, {
+                    launchPad.noteOn(0, num, onColor);
+                });
+            });
+
+            /// LIGHT DOWN LAUNCHPAD            
+            offPads.do({
+                arg val, ind;
+                if(num == val, {
+                    launchPad.noteOn(0, num-1, offColor);
+                    fork {blinkPad.value(num);};
+                });
+            });
+
             switch(num,
-                64, {
+                onPads[0], { //64
                     //DIABETES SYNTH
+                    padStates[0] = 1;
                     if(leftDiabetes.isPlaying() == false,
                        {leftDiabetes = Synth.new(\diabetes, [\velocity, 10, \pan, diabetesLeftBus, \freq, 70,\buf, 5, \detuneFactor, 1.0]).register(true);}
                     );
@@ -188,7 +241,8 @@
                         {rightDiabetes = Synth.new(\diabetes, [\velocity, 10, \freq, 80, \buf, 0, \pan, diabetesRightBus, \detuneFactor, 0.9]).register(true);}
                     );
                 },
-                65, {
+                offPads[0], {//65
+                    padStates[0] = 0;
                     if(leftDiabetes.isPlaying(),
                         {leftDiabetes.free;}
                     );
@@ -197,34 +251,51 @@
                     );
                    //TRIGGER OSC SHIFT OF SCENE
                 },
-                66, {
+                onPads[1], {
+                    padStates[1] = 1;
                     if(harshNoise.isPlaying() == false,
                         {harshNoise = Synth(\gatedBuffer, [ \bufnum, harshBuffer, \out_buffer, harshBus]).register(true);}
                     );
                 },
-                67, {
+                offPads[1], {
+                    padStates[1] = 0;
                     if(harshNoise.isPlaying(),
                         {harshNoise.free;}
                     );
                 },
-                96, {
+                onPads[2], {
+                    padStates[2] = 1;
                     if(Pbindef(\sequencer).isPlaying() == false,
                         {Pbindef(\sequencer).play(quant:0);}
                     );
                 },
-                97, {
+                offPads[2], {
+                    padStates[2] = 0;
                     if(Pbindef(\sequencer).isPlaying(),
                         {Pbindef(\sequencer).pause;}
                     );
+                }, 
+                99, {
+                    if(moireBassSynth.isPlaying(),
+                        {moireBassSynth.free;}
+                    );
+                    if(moireSynth.isPlaying(),
+                        {moireSynth.free;}
+                    );
+                    fork {blinkPad.value(99);};
                 }
             );
         }, chan: 0);
 
+        MIDIFunc.cc({
+            arg ...args;
+            resetPads.value();
+        }, ccNum: 109);
+
         MIDIFunc.noteOn({
             arg vel, note;
-            if(createdBassSynth == False, {
+            if(moireBassSynth.isPlaying() == false, {
                 moireBassSynth = Synth.new(\Interference, [\harmonics, 0.1, \detune, 1, \in_left, noiseLeftBus, \in_right, noiseRightBus, \freq, customScale.value(note), \out_left, moireBassRightBus, \out_right, moireBassLeftBus], fxGroup).register(true);
-                createdBassSynth = True;
             },  {
                 moireBassSynth.set(\freq, customScale.value(note));
             });
@@ -232,9 +303,8 @@
 
         MIDIFunc.noteOn({
             arg vel, note;
-            if(createdSynth == False, {
+            if(moireSynth.isPlaying() == false, {
                 moireSynth = Synth.new(\Interference, [\harmonics, 0.1, \detune, 1, \in_left, noiseLeftBus, \in_right, noiseRightBus, \freq, customScale.value(note), \out_left, moireLeftBus, \out_right, moireRightBus], fxGroup).register(true);
-                createdSynth = True;
             },  {
                 moireSynth.set(\freq, customScale.value(note));
             });
@@ -259,3 +329,4 @@ Pbindef(\sequencer).isPlaying();
 
 OSCFunc.trace(false)
 MIDIdef.freeAll;
+
