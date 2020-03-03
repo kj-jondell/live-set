@@ -18,6 +18,7 @@
 
     s.waitForBoot({
         ///////////////////////////////////VARIABLES\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
+        // Launchpad led-variables
         var launchPad = MIDIOut.newByName("Launchpad Mini", "Launchpad Mini", false);
         var onPads = #[64,66,96], offPads = #[65,67,97];
         var resonatorPads = #[36,37];
@@ -182,6 +183,7 @@
         ///////////////////////////////////MIDI DEFINITIONS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
 
         //check if left/right diabetes synths are initilized
+        MIDIdef.freeAll;
         MIDIFunc.cc({arg val, num;
             switch(num,
                 16, {
@@ -336,10 +338,4 @@ s.record;
 s.stopRecording;
 s.scope;
 
-//FREEING AND PLAYING WITH MIDI
-Pbindef(\sequencer).pause;
-Pbindef(\sequencer).isPlaying();
-
 OSCFunc.trace(false)
-MIDIdef.freeAll;
-
