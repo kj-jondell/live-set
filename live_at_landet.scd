@@ -20,7 +20,9 @@
         ///////////////////////////////////VARIABLES\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
         var launchPad = MIDIOut.newByName("Launchpad Mini", "Launchpad Mini", false);
         var onPads = #[64,66,96], offPads = #[65,67,97];
+        var resonatorPads = #[36,37];
         var padStates = [0,0,0];
+        var resonatorPadStates = [0,0];
         var onColor = 120, offColor = 122, stopBlink = 11, stopRest = 13;
         var blinkPad = {arg midi;
             launchPad.noteOn(0, midi, stopBlink);
@@ -72,9 +74,12 @@
                 arg val; 
                 launchPad.noteOn(0, val, stopRest);
             });
+            resonatorPads.do({
+                arg val, index;
+                launchPad.noteOn(0, val, if(resonatorPadStates[index] == 1, {onColor}, {offColor}))
+            });
         };
 
-        resetPads.value();
         //Load buffers
         Buffer.freeAll(s);
         order.do({
@@ -217,6 +222,7 @@
             onPads.do({
                 arg val, ind;
                 if(num == val, {
+                    padStates[ind] = 1;
                     launchPad.noteOn(0, num, onColor);
                 });
             });
@@ -225,15 +231,27 @@
             offPads.do({
                 arg val, ind;
                 if(num == val, {
+                    padStates[ind] = 0;
                     launchPad.noteOn(0, num-1, offColor);
                     fork {blinkPad.value(num);};
                 });
             });
 
+            ///RESONATOR PADS
+            resonatorPads.do({
+                arg val, ind;
+                if(num == val){
+                    resonatorPadStates[ind] = 1;    
+                    resonatorPadStates[(ind+1)%resonatorPadStates.size] = 0;
+
+                    launchPad.noteOn(0, resonatorPads[ind], onColor);
+                    launchPad.noteOn(0, resonatorPads[(ind+1)%resonatorPads.size], offColor);
+                }
+            });
+
             switch(num,
                 onPads[0], { //64
                     //DIABETES SYNTH
-                    padStates[0] = 1;
                     if(leftDiabetes.isPlaying() == false,
                        {leftDiabetes = Synth.new(\diabetes, [\velocity, 10, \pan, diabetesLeftBus, \freq, 70,\buf, 5, \detuneFactor, 1.0]).register(true);}
                     );
@@ -242,7 +260,6 @@
                     );
                 },
                 offPads[0], {//65
-                    padStates[0] = 0;
                     if(leftDiabetes.isPlaying(),
                         {leftDiabetes.free;}
                     );
@@ -252,25 +269,21 @@
                    //TRIGGER OSC SHIFT OF SCENE
                 },
                 onPads[1], {
-                    padStates[1] = 1;
                     if(harshNoise.isPlaying() == false,
                         {harshNoise = Synth(\gatedBuffer, [ \bufnum, harshBuffer, \out_buffer, harshBus]).register(true);}
                     );
                 },
                 offPads[1], {
-                    padStates[1] = 0;
                     if(harshNoise.isPlaying(),
                         {harshNoise.free;}
                     );
                 },
                 onPads[2], {
-                    padStates[2] = 1;
                     if(Pbindef(\sequencer).isPlaying() == false,
                         {Pbindef(\sequencer).play(quant:0);}
                     );
                 },
                 offPads[2], {
-                    padStates[2] = 0;
                     if(Pbindef(\sequencer).isPlaying(),
                         {Pbindef(\sequencer).pause;}
                     );

@@ -6,9 +6,7 @@ void setup() {
   fullScreen(P3D);
   noCursor();
   pixelDensity(2);
-  // The file "bot.obj" must be in the data folder
-  // of the current sketch to load successfully
-  //s = loadShape("untitled.obj");
+
   noStroke();
   smooth();
 
@@ -16,14 +14,13 @@ void setup() {
   moon = createShape(SPHERE,8);
   s.scale(5);
   moon.scale(5);
-  //img = loadImage("jup.jpg");
+
   img = loadImage("earth2.jpg");
   s.setTexture(img);
   moon.setTexture(loadImage("moon.jpg"));
   moon.translate(0,0,400);
 
- // moonground = loadImage("earthrise.jpg");
-  perspective();
+  perspective();//TODO:remove?
   background(0);
 }
 
