@@ -74,7 +74,7 @@ void draw() {
      }
   endShape();
 
-    beginShape(POINTS);
+    beginShape(POINTS); //createShape(POINT) and store in array...
     for (int x=0; x < cols; x++) {
       stroke(255,map(y, 0, rows, 0, 255));
       strokeWeight(1);//possibly change to two? when blink?

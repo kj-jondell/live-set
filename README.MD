@@ -8,6 +8,8 @@
 5. Light
 6. Shapes (terrain morphing into stars...) 
 
+## SuperCollider
+
 ## TODO
 ### General form
 1. Write down form of everything
@@ -16,4 +18,8 @@
 1. Put together all code ("TERRAIN --> STARS --> SYNCHRONIZED OBJECTS --> EARTH+MOON")
 
 ### SuperCollider
-1. MIDI for drum-machine, harsh-noise
+1. MIDI for drum-machine, harsh-noise...
+
+### Ableton
+1. Record midi for clips
+2. General cleanup...
