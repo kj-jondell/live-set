@@ -106,7 +106,7 @@
 
         s.sync;
 
-        oscProcessing = NetAddr.new("localhost", 7771); // raspi ip 192.168.2.2
+        oscProcessing = NetAddr.new("192.168.2.2", 7771); // raspi ip 192.168.2.2
         (File.getcwd +/+ "defs/synth-defs.sc").load(); //load Synth Defs
 
         ///////////////////////////////////PBINDS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
@@ -121,7 +121,7 @@
            \dur, Pfunc({durations.wchoose(choices[0..durations.size-1].normalizeSum);}),
            \bla, Pfunc { |e| oscProcessing.sendMsg("/dur", e[\rate] ) },
            \add, Pfunc { fork{
-               0.2.wait;
+               0.1.wait;
                if(harshNoise.isPlaying(),{
                        harshNoise.set(\gate_level,-0.001); // TODO: maybe design some other way (and change parameter names...)
                        0.5.wait;
@@ -158,15 +158,15 @@
                     {
                         leftDiabetes.set(\freq,val.linexp(0,127,70,110)); 
                         leftDiabetes.set(\buf,val.linlin(0,127,5,28)); 
-                        leftDiabetes.set(\velocity,val.linexp(0,127,10,120)); 
-                        leftDiabetes.set(\detuneFactor, val.linlin(0,127,1.0,0));
+                        leftDiabetes.set(\velocity,val.linexp(0,127,30,120)); 
+                        leftDiabetes.set(\detuneFactor, val.linlin(0,127,0.7,0));
                     }
                     );
 
                     if(rightDiabetes.isPlaying(),
                     {
-                        rightDiabetes.set(\detuneFactor, val.linlin(0,127,0.9,0));
-                        rightDiabetes.set(\velocity,val.linexp(0,127,10,120)); 
+                        rightDiabetes.set(\detuneFactor, val.linlin(0,127,0.6,0));
+                        rightDiabetes.set(\velocity,val.linexp(0,127,25,120)); 
                         rightDiabetes.set(\freq,val.linexp(0,127,80,110)); 
                         rightDiabetes.set(\buf,val.linlin(0,127,0,28)); 
                     }
@@ -174,10 +174,13 @@
                 },
                 18, {
                     if(moireBassSynth.isPlaying(),
-                        {moireBassSynth.set(\detune, val.linlin(0,127,1,5);)}
+                        {moireBassSynth.set(\detune, val.linlin(0,127,1,5));}
                     );
                     if(moireSynth.isPlaying(),
-                        {moireSynth.set(\detune, val.linlin(0,127,1,5);)}
+                        {moireSynth.set(\detune, val.linlin(0,127,1,5));}
+                    );
+                    if(harshNoise.isPlaying(),
+                        {harshNoise.set(\midi_gate_level, val.linlin(0,127,0.25,-0.25));}  
                     );
                 },
                 20, {
