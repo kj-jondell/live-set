@@ -4,7 +4,7 @@
 ****** a) renaming variables...
 * 4.5 break into several sc-files...
 * 10. outputs???
-* 
+* 11. Write LaunchPad-class..... 
 * - MIDI drum machine
 * - MIDI harshNoise
 * ® Karl Johannes Jondell
@@ -81,7 +81,7 @@
             });
         };
 
-        //Load buffers
+        ///////////////////////////////////LOAD BUFFERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
         Buffer.freeAll(s);
         order.do({
             arg index, count;
@@ -250,6 +250,7 @@
             );
         }, chan: 0);
 
+        //If user changes from Session/User1/User2/Mixer mode on LaunchPad...
         MIDIFunc.cc({
             arg ...args;
             resetPads.value();
