@@ -10,7 +10,7 @@
 
 ### Objects
 1. Stars moire...
-2. added
+2. added some more
 
 ## SuperCollider
 
