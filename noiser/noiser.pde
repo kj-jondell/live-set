@@ -12,7 +12,8 @@ import netP5.*;
 
 //Stellar colors, categories: OBAFGKM
 //http://www.vendian.org/mncharity/dir3/starcolor/
-final static color [] STELLARS = {#9BB0FF, #AABFFF, #CAD7FF, #F8F7FF, #FFF4EA, #FFD2A1, #FFCC6F};
+//final static color [] STELLARS = {#9BB0FF, #AABFFF, #CAD7FF, #F8F7FF, #FFF4EA, #FFD2A1, #FFCC6F};
+final static color [] STELLARS = {#FFFFFF};
 
 OscP5 oscP5;
 NetAddress netAddr;
@@ -21,6 +22,7 @@ PShape s, moon;
 PImage img;
 
 ArrayList<Pixel> coordinates = new ArrayList<Pixel>();
+//ArrayList<Pshapes>? createShape(POINT);
 float alpha= 0, alpha_incr=0.5, levels = 50, incr = 0.01;
 int pixelScalar = 1, amtDots = 1000;
 
@@ -132,19 +134,8 @@ void draw()
 
          }
       }
-//  filter(GRAY);
-    blink = false;
-    /*
-       moon.rotate(0.01,0,1,0);
 
-       s.rotate(0.01,0,0,1);
-    //s.translate(0,0,0);
-    directionalLight(255,255,255, -1,0.5,0);
-    //spotLight(51, 102, 126, 80, 20, 40, -1, 0, 0, PI/2, 2);
-    ambientLight(30,30,30);
-    shape(moon,width/2,height/2);
-    shape(s,width/2,height/2);
-     */
+    blink = false;
 }
 
 class Pixel {

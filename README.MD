@@ -1,3 +1,13 @@
+### FORM
+## Processing
+# Parameters
+1. Blinking (could be synchronized with music...)
+2. Terrain Height
+3. Flyspeed
+4. Color
+5. Light
+6. Shapes (terrain morphing into stars...) 
+
 ### TODO
 ## General form
 1. Write down form of everything
