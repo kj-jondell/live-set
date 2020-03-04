@@ -60,7 +60,7 @@
 
         //TODO: RENAME FOLLOWING VARIABLES....
         var choices = [1,4,9,16,25].normalizeSum;
-        var durations = [1/9, 3/16, 3/24, 1/7, 1/8];
+        var durations = [1/8];//[1/9, 3/16, 3/24, 1/7, 1/8];
         //var durations = [1/18,1/1,1/9];
         var rates = Tuning.just.ratios.collect(_.round(0.001))[0..2]; 
         //var rates = rates++(1/rates[1..]);
@@ -91,6 +91,8 @@
         harshBuffer = Buffer.read(s, path: File.getcwd +/+ "media/electricity.aif");
         slices = SoundFile.collectIntoBuffers(File.getcwd +/+ "media/normalized/*", s);
 
+        s.sync;
+
         oscProcessing = NetAddr.new("localhost", 7771); // raspi ip 192.168.2.2
         (File.getcwd +/+ "defs/synth-defs.sc").load(); //load Synth Defs
 
@@ -101,7 +103,7 @@
            \rate, Pfunc({rates.choose}),
            \bufnum, Pfunc({
                var total = offset+subAmt;
-               slices[offset..if(total<slices.size,{total},{slices.size-1})].choose.bufnum;
+               slices.mirror[offset..(offset+subAmt)].choose.bufnum;
            }),
            \dur, Pfunc({durations.wchoose(choices[0..durations.size-1]);}),
            \bla, Pfunc { |e| oscProcessing.sendMsg("/dur", e[\rate] ) },
