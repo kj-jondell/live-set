@@ -91,8 +91,6 @@
         harshBuffer = Buffer.read(s, path: File.getcwd +/+ "media/electricity.aif");
         slices = SoundFile.collectIntoBuffers(File.getcwd +/+ "media/normalized/*", s);
 
-        s.sync;
-
         oscProcessing = NetAddr.new("localhost", 7771); // raspi ip 192.168.2.2
         (File.getcwd +/+ "defs/synth-defs.sc").load(); //load Synth Defs
 
@@ -101,7 +99,10 @@
         Pbindef.new(\sequencer,
            \instrument, \sliceBuffer,
            \rate, Pfunc({rates.choose}),
-           \bufnum, Pfunc({slices[offset..(subAmt+offset)%slices.size].choose.bufnum;}),
+           \bufnum, Pfunc({
+               var total = offset+subAmt;
+               slices[offset..if(total<slices.size,{total},{slices.size-1})].choose.bufnum;
+           }),
            \dur, Pfunc({durations.wchoose(choices[0..durations.size-1]);}),
            \bla, Pfunc { |e| oscProcessing.sendMsg("/dur", e[\rate] ) },
            \add, Pfunc { fork{
@@ -120,7 +121,6 @@
         s.sync; //wait for Synthdef and buffers...
 
         ///////////////////////////////////SYNTH GENS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
-
         sourceGroup = Group.new;
         fxGroup = Group.after;
 
@@ -163,6 +163,16 @@
                     if(moireSynth.isPlaying(),
                         {moireSynth.set(\detune, val.linlin(0,127,1,5);)}
                     );
+                },
+                20, {
+                    if(Pbindef(\sequencer).isPlaying(),{
+                        subAmt = val.linlin(0,127,0,slices.size).asInteger();
+                    });
+                },
+                21, {
+                    if(Pbindef(\sequencer).isPlaying(),{
+                        offset = val.linlin(0,127,0,slices.size).asInteger();
+                    });
                 }
             );
         });
