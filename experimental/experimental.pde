@@ -22,7 +22,7 @@ void setup() {
   cols = width / scale;
   rows = height / scale;
   terrain = new float[cols][rows];
-hint(DISABLE_DEPTH_TEST);
+  hint(DISABLE_DEPTH_TEST);//needed later?
 }
 
 void oscEvent(OscMessage msg){
