@@ -1,4 +1,4 @@
-# FORM
+# Form
 ## Processing
 ### Parameters
 1. Blinking (could be synchronized with music...)
