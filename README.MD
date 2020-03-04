@@ -8,6 +8,9 @@
 5. Light
 6. Shapes (terrain morphing into stars...) 
 
+### Objects
+1. Stars moire...
+
 ## SuperCollider
 
 ## TODO
