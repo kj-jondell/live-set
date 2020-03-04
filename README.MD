@@ -7,6 +7,7 @@
 4. Color
 5. Light
 6. Shapes (terrain morphing into stars...) 
+7. other things...
 
 ### Objects
 1. Stars moire...
