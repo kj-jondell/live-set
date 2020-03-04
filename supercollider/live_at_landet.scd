@@ -60,11 +60,12 @@
         //Noise drum machine variable declarations
         var slices; //Normalized buffers (!)
 
+        //COOL  NAME : MACHINE DRUM
         //TODO: RENAME FOLLOWING VARIABLES....
         var choices = [1,4,9,16,25].normalizeSum;
         var possibleDurations = [
             [1/3, 1/4, 1],
-            [1/3, 1/8, 1/4],
+            [1, 1/3, 1/8, 1/4],
             [1/16, 1/5, 1/4, 1/8],
             [1/8]
         ];
@@ -120,6 +121,7 @@
            \dur, Pfunc({durations.wchoose(choices[0..durations.size-1].normalizeSum);}),
            \bla, Pfunc { |e| oscProcessing.sendMsg("/dur", e[\rate] ) },
            \add, Pfunc { fork{
+               0.2.wait;
                if(harshNoise.isPlaying(),{
                        harshNoise.set(\gate_level,-0.001); // TODO: maybe design some other way (and change parameter names...)
                        0.5.wait;
