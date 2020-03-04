@@ -22,8 +22,10 @@
         var launchPad = MIDIOut.newByName("Launchpad Mini", "Launchpad Mini", false);
         var onPads = #[64,66,96], offPads = #[65,67,97];
         var resonatorPads = #[36,37];
+        var drumMachinePads = #[68,69,70,71];
         var padStates = [0,0,0];
-        var resonatorPadStates = [0,0];
+        var activeResonatorPad = 0; //change to active pad..
+        var activeDrumPad = 0;
         var onColor = 120, offColor = 122, stopBlink = 11, stopRest = 13;
         var blinkPad = {arg midi;
             launchPad.noteOn(0, midi, stopBlink);
@@ -60,7 +62,13 @@
 
         //TODO: RENAME FOLLOWING VARIABLES....
         var choices = [1,4,9,16,25].normalizeSum;
-        var durations = [1/8];//[1/9, 3/16, 3/24, 1/7, 1/8];
+        var possibleDurations = [
+            [1/3, 1/4, 1],
+            [1/3, 1/8, 1/4],
+            [1/16, 1/5, 1/4, 1/8],
+            [1/8]
+        ];
+        var durations = possibleDurations[0];//[1/9, 3/16, 3/24, 1/7, 1/8];
         //var durations = [1/18,1/1,1/9];
         var rates = Tuning.just.ratios.collect(_.round(0.001))[0..2]; 
         //var rates = rates++(1/rates[1..]);
@@ -77,7 +85,11 @@
             });
             resonatorPads.do({
                 arg val, index;
-                launchPad.noteOn(0, val, if(resonatorPadStates[index] == 1, {onColor}, {offColor}))
+                launchPad.noteOn(0, val, if(activeResonatorPad == index, {onColor}, {offColor}))
+            });
+            drumMachinePads.do({
+                arg val, index;
+                launchPad.noteOn(0, val, if(activeDrumPad == index, {onColor}, {offColor}))
             });
         };
 
@@ -105,7 +117,7 @@
                var total = offset+subAmt;
                slices.mirror[offset..(offset+subAmt)].choose.bufnum;
            }),
-           \dur, Pfunc({durations.wchoose(choices[0..durations.size-1]);}),
+           \dur, Pfunc({durations.wchoose(choices[0..durations.size-1].normalizeSum);}),
            \bla, Pfunc { |e| oscProcessing.sendMsg("/dur", e[\rate] ) },
            \add, Pfunc { fork{
                if(harshNoise.isPlaying(),{
@@ -203,12 +215,22 @@
             resonatorPads.do({
                 arg val, ind;
                 if(num == val){
-                    resonatorPadStates[ind] = 1;    
-                    resonatorPadStates[(ind+1)%resonatorPadStates.size] = 0;
+                    activeResonatorPad = ind;
 
                     launchPad.noteOn(0, resonatorPads[ind], onColor);
                     launchPad.noteOn(0, resonatorPads[(ind+1)%resonatorPads.size], offColor);
                 }
+            });
+
+            drumMachinePads.do({
+                arg value, ind; 
+                if(num == value and: {ind != activeDrumPad}, {
+                    launchPad.noteOn(0, drumMachinePads[activeDrumPad], offColor);
+                    activeDrumPad = ind;
+                    launchPad.noteOn(0, drumMachinePads[ind], onColor);
+
+                    durations = possibleDurations[ind];
+                });
             });
 
             switch(num,
