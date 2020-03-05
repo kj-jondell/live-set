@@ -89,7 +89,7 @@ class Terrain { //TODO: extends PGraphics
     }
 
     void setTerrainHeight(float terrainHeight){
-        this.terrainHeight = terrainHeight;
+        this.tHeight = terrainHeight;
     }
 
     /*
