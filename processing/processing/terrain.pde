@@ -1,12 +1,12 @@
 class Terrain { //TODO: extends PGraphics 
     final static int SCALE = 15;
-    float triangleOpacity = 0.2;
+    float triangleOpacityFactor = 0.2;
 
     int columns, rows;
     float flying, flySpeed, tHeight;
     float[][] coordinates;
 
-    ArrayList <PVector> points;
+    ArrayList <TPoint> points;
     PGraphics tGraphics;
 
     /*
@@ -26,7 +26,7 @@ class Terrain { //TODO: extends PGraphics
         this.flying = 0;
         this.tHeight = 0;
         this.flySpeed = 0;
-        this.points = new ArrayList<PVector>();
+        this.points = new ArrayList<TPoint>();
     }
 
     /*
@@ -55,12 +55,15 @@ class Terrain { //TODO: extends PGraphics
 
         this.generateTerrain();
 
-        this.tGraphics.rotateX(PI/4);
+        this.tGraphics.rotateX(PI/4); // Set this with a variable
+        int vectorCount = 0;
         for (int y=0; y < this.rows-1; y++){
             this.tGraphics.beginShape(TRIANGLE_STRIP);
             for (int x=0; x < this.columns; x++) {
+                float opacity = map(y, 0, this.rows, 0, 255);
                 this.tGraphics.strokeWeight(1);
-                this.tGraphics.stroke(map(this.coordinates[x][y], 0, 100, 150, 255), 125, 255, map(y, 0, this.rows, 0, 255)*(this.triangleOpacity));//LIGHTNING :random(10000)>9900?1:0.1
+
+                this.tGraphics.stroke(map(this.coordinates[x][y], 0, 100, 150, 255), 125, 255, opacity*this.triangleOpacityFactor);//LIGHTNING :random(10000)>9900?1:0.1 AND change hue..
 
                 PVector v1 = new PVector(x*this.SCALE, y*this.SCALE, this.coordinates[x][y]);
                 PVector v2 = new PVector(x*this.SCALE, (y+1)*this.SCALE, this.coordinates[x][y+1]);
@@ -68,15 +71,22 @@ class Terrain { //TODO: extends PGraphics
                 this.tGraphics.vertex(v1.x, v1.y, v1.z);
                 this.tGraphics.vertex(v2.x, v2.y, v2.z);
 
-                this.points.add(v1);
-                this.points.add(v2);
+                if(this.points.size()<((this.rows-1)*(this.columns)*2)){
+                    this.points.add(new TPoint(v1, opacity));
+                    this.points.add(new TPoint(v2, opacity));
+                } else {
+                    this.points.get(vectorCount).setCoordinate(v1);
+                    this.points.get(vectorCount+1).setCoordinate(v2);
+                }
+                vectorCount += 2;
             }
             this.tGraphics.endShape();
         }
 
-        for (PVector v : this.points){
+        for (TPoint p : this.points){
+            PVector v = p.coordinate;
             this.tGraphics.strokeWeight(2);
-            this.tGraphics.stroke(255);
+            this.tGraphics.stroke(255, p.opacity);
             this.tGraphics.point(v.x, v.y, v.z);
         }
 
@@ -95,7 +105,30 @@ class Terrain { //TODO: extends PGraphics
     /*
      * Vertex points...
      */
-    ArrayList<PVector> getPoints(){
+    ArrayList<TPoint> getPoints(){
         return this.points;
     }
+}
+
+class TPoint {
+    PVector coordinate;
+    float opacity;
+
+    TPoint(float x, float y, float opacity){
+        this(x,y,0,opacity); 
+    }
+
+    TPoint(float x, float y, float z, float opacity){
+        this(new PVector(x,y,z), opacity);
+    }
+
+    TPoint(PVector coordinate, float opacity){
+        this.coordinate = coordinate;
+        this.opacity = opacity;
+    }
+
+    void setCoordinate(PVector newCoordinate){
+        this.coordinate = newCoordinate;
+    }
+
 }

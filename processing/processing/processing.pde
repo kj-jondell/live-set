@@ -8,23 +8,23 @@ import oscP5.*;
 import netP5.*;
 
 // OPTIONS 
-final static int PIXEL_DENSITY = 2, OSC_PORT = 6543; 
+final static int PIXEL_DENSITY = 2, OSC_PORT = 6542; 
 final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = true; 
+final static float FLY_SCALE = 100;
 
 OscP5 oscP5;
 NetAddress netAddr;
 
+int terrainOpacity = 0;
 Terrain movingTerrain;
 
 public void settings() {
-    if(NO_FULLSCREEN)
-        size(600, 400, "processing.opengl.PGraphics3D");
+    if(!NO_FULLSCREEN) fullScreen(P3D);
+    else size(600, 400, P3D);
     pixelDensity(PIXEL_DENSITY);
 }
 
 void setup(){
-    if(!NO_FULLSCREEN) fullScreen(P3D);
-
     noCursor();
 
     if(OSC_ENABLED){
@@ -39,6 +39,7 @@ void setup(){
 
 void draw(){
     background(0); //black background
+    tint(255, terrainOpacity);
     image(movingTerrain.drawTerrain(), 0, 0);
 }
 
@@ -49,10 +50,16 @@ void oscEvent(OscMessage msg){
     try{
         switch(msg.addrPattern()){
             case "/terrainHeight" :   
-                if(msg.checkTypetag("fi"));
+                if(msg.checkTypetag("i"))
+                    movingTerrain.setTerrainHeight(msg.get(0).intValue());
                 break; 
             case "/flySpeed" :   
-                if(msg.checkTypetag("fi"));
+                if(msg.checkTypetag("f"))
+                    movingTerrain.setFlySpeed(msg.get(0).floatValue()/FLY_SCALE);
+                break; 
+            case "/terrainFade" :   
+                if(msg.checkTypetag("i"))
+                    terrainOpacity = msg.get(0).intValue();
                 break; 
         }
     }catch(Exception e){
