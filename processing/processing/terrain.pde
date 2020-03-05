@@ -1,6 +1,6 @@
 class Terrain { //TODO: extends PGraphics 
     final static int SCALE = 15;
-    float triangleOpacityFactor = 0.2;
+    float triangleOpacityFactor = 1;
 
     int columns, rows;
     float flying, flySpeed, tHeight;
@@ -51,7 +51,7 @@ class Terrain { //TODO: extends PGraphics
     PGraphics drawTerrain(){
         this.tGraphics.beginDraw();
         this.tGraphics.noFill();
-        this.tGraphics.background(0);
+        this.tGraphics.clear();
 
         this.generateTerrain();
 
@@ -83,13 +83,6 @@ class Terrain { //TODO: extends PGraphics
             this.tGraphics.endShape();
         }
 
-        for (TPoint p : this.points){
-            PVector v = p.coordinate;
-            this.tGraphics.strokeWeight(2);
-            this.tGraphics.stroke(255, p.opacity);
-            this.tGraphics.point(v.x, v.y, v.z);
-        }
-
         this.tGraphics.endDraw();
         return this.tGraphics;
     }
@@ -110,7 +103,7 @@ class Terrain { //TODO: extends PGraphics
     }
 }
 
-class TPoint {
+public class TPoint {
     PVector coordinate;
     float opacity;
 

@@ -7,16 +7,20 @@
 import oscP5.*;
 import netP5.*;
 
+final static int TERRAIN = 0, STARS = 1, SYNCHRONIZED = 2, EARTHMOON = 3; 
+
 // OPTIONS 
-final static int PIXEL_DENSITY = 2, OSC_PORT = 6542; 
+final static int PIXEL_DENSITY = 2, OSC_PORT = 6541; 
 final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = true; 
 final static float FLY_SCALE = 100;
 
 OscP5 oscP5;
 NetAddress netAddr;
+int currentStage = TERRAIN;
 
 int terrainOpacity = 0;
 Terrain movingTerrain;
+Stars stars;
 
 public void settings() {
     if(!NO_FULLSCREEN) fullScreen(P3D);
@@ -33,36 +37,42 @@ void setup(){
     }
 
     movingTerrain = new Terrain(width, height);
+    stars = new Stars(width, height);
 
     hint(DISABLE_DEPTH_TEST); //needed?
 }
 
+Boolean first = true; //TODO remove
 void draw(){
     background(0); //black background
     tint(255, terrainOpacity);
     image(movingTerrain.drawTerrain(), 0, 0);
+    tint(255, 200);
+    image(stars.drawStars(movingTerrain.getPoints()), 0, 0);
 }
 
 /*
  * Handling OSC Events...
  */
 void oscEvent(OscMessage msg){
-    try{
-        switch(msg.addrPattern()){
-            case "/terrainHeight" :   
-                if(msg.checkTypetag("i"))
-                    movingTerrain.setTerrainHeight(msg.get(0).intValue());
-                break; 
-            case "/flySpeed" :   
-                if(msg.checkTypetag("f"))
-                    movingTerrain.setFlySpeed(msg.get(0).floatValue()/FLY_SCALE);
-                break; 
-            case "/terrainFade" :   
-                if(msg.checkTypetag("i"))
-                    terrainOpacity = msg.get(0).intValue();
-                break; 
-        }
-    }catch(Exception e){
-        println(e); 
+  try{
+    switch(msg.addrPattern()){
+      case "/terrainHeight" :   
+        if(msg.checkTypetag("i"))
+          movingTerrain.setTerrainHeight(msg.get(0).intValue());
+        break; 
+      case "/flySpeed" :   
+        if(msg.checkTypetag("f"))
+          movingTerrain.setFlySpeed(msg.get(0).floatValue()/FLY_SCALE);
+        break; 
+      case "/terrainFade" :   
+        if(msg.checkTypetag("i"))
+          terrainOpacity = msg.get(0).intValue();
+        break; 
     }
+    //FOR DEBUGGING
+    //println(terrainOpacity); 
+  }catch(Exception e){
+    println(e); 
+  }
 }
