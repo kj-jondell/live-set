@@ -34,7 +34,8 @@ void setup()
   frameRate(15);
   noFill();
   smooth();
-  noStroke();
+//  noStroke();
+  stroke(255,255,255,127);
   oscP5 = new OscP5(this, 2346);
   netAddr = new NetAddress("127.0.0.1", 2346);
   background(0);
@@ -53,14 +54,16 @@ void setup()
   s.setTexture(img);
   moon.setTexture(loadImage("moon.jpg"));
   moon.translate(0,0,100);
+pixelDensity(2);
 }
 
 void generatePixel(){
   color pixcol = STELLARS[(int)(random(STELLARS.length))];
   int x = (int)random(2*width)-width/2; //translate to move center of rotation
   int y = (int)random(2*width)-width/2; //translate to move center of rotation
-  coordinates.add(new Pixel(x, y, pixcol));
-  set(x,y,pixcol);
+  coordinates.add(new Pixel(new PVector(x,y,random(500)), pixcol));
+  point(x,y,500);
+  //set(x,y,pixcol);
 }
 
 void oscEvent(OscMessage msg){
@@ -88,10 +91,7 @@ void oscEvent(OscMessage msg){
 
 Boolean blink = false;
 float newAlpha(float x, float y){
-  if(blink){ //blinking...
-    return 1.0;
-  }
-  return constrain(map(dist(x,y,width/2,height/2), 0, dist(width/3,height/3,width/2,height/2), 0.0, 1.0), 0.0,1.0);
+  return constrain(map(dist(x,y,0,0), 0, dist(width,height,0,0), 0.0, 1.0), 0.0,1.0);
 }
 
 float a=0.00,low_bound=0.25,hi_bound=1;
@@ -105,6 +105,7 @@ void draw()
      incr = -incr;
 
   
+
      for (int ind = 0; ind<coordinates.size(); ind++)
        {
          PVector p = coordinates.get(ind).coordinates;
@@ -112,20 +113,28 @@ void draw()
          p.x -= width/2;
          //OPTIMIZE THIS (not necessary with so many levels for points close to origin of rotation
          for (int level = 1; level<=levels; level++){
-           float new_a = a/10000*level;
-           float new_y = (p.y*cos(new_a) - p.x*sin(new_a))*constrain(map(dist(p.x,p.y,0,0), 0, dist(0,0,width/2,height/2), 0.96,0.98), low_bound, hi_bound); 
-           float new_x = (p.y*sin(new_a) + p.x*cos(new_a))*constrain(map(dist(p.x,p.y,0,0),0, dist(0,0,width/2,height/2),  0.96,0.98), low_bound, hi_bound);
+           float new_a = a/5000*level;
+           float new_y = (p.y*cos(new_a) - p.x*sin(new_a)); 
+           float new_x = (p.y*sin(new_a) + p.x*cos(new_a));
+           float new_z = p.z-0.5;
+           //float new_y = (p.y*cos(new_a) - p.x*sin(new_a))*constrain(map(dist(p.x,p.y,0,0), 0, dist(0,0,width/2,height/2), 0.96,0.98), low_bound, hi_bound)*newAlpha(p.x,p.y); 
+           //float new_x = (p.y*sin(new_a) + p.x*cos(new_a))*constrain(map(dist(p.x,p.y,0,0),0, dist(0,0,width/2,height/2),  0.96,0.98), low_bound, hi_bound)*newAlpha(p.x,p.y);
            new_y += height/2;
            new_x += width/2;
-           color current = coordinates.get(ind).pixelColor ;
-           float n_alpha = newAlpha(new_x,new_y);
-           color newColor = color(red(current)*n_alpha,green(current)*n_alpha,blue(current)*n_alpha); 
-           set((int)new_x,(int)new_y, newColor);
+           point(new_x,new_y);
+              strokeWeight(2);
+           /*
+              beginShape(POINTS);
+              strokeWeight(2);
+              vertex(new_x,new_y);
+              endShape();
+            */
+           ////set((int)new_x,(int)new_y, newColor);
 
            if( level == levels )
            {
-             coordinates.get(ind).coordinates = new PVector(new_x,new_y);
-             if(dist(new_x,new_y,width/2,height/2)<=10)
+             coordinates.get(ind).coordinates = new PVector(new_x,new_y, new_z);
+             if(dist(new_x,new_y,width/2,height/2)<=0.1)
              {
                coordinates.remove(ind);
                generatePixel();
