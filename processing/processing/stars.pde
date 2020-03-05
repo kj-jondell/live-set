@@ -13,6 +13,11 @@ class Stars {
        }
      */
 
+    PGraphics drawStars(){
+        //...
+        return this.sGraphics;
+    }
+
     PGraphics drawStars(ArrayList<TPoint> stars){
         this.sGraphics.beginDraw();
         this.sGraphics.clear();

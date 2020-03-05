@@ -12,7 +12,7 @@ SynthDef.new(
     \diabetes,
     {
         arg freq = 440, velocity = 67, detuneFactor = 1.0, buf = 1, pan = 0;
-        var sig = VOsc3.ar(buf, freq1:freq, freq2:freq*(1.0-(detuneFactor*0.5)), freq3:freq*(1.0+(detuneFactor*0.5)), mul: Lag2.kr(velocity.linlin(0,127,-15,-5).dbamp));
+        var sig = VOsc3.ar(buf, freq1:freq, freq2:freq*(1.0-(detuneFactor*0.5)), freq3:freq*(1.0+(detuneFactor*0.5)), mul: Lag2.kr(velocity.linlin(0,127,-15,-6).dbamp));
         var filter = LPF.ar(sig, freq*Lag2.kr(velocity.linlin(0,127,0.75,12)));
         Out.ar(pan,filter);
 }).add;

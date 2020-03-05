@@ -26,11 +26,12 @@
         var padStates = [0,0,0];
         var activeResonatorPad = 0; //change to active pad..
         var activeDrumPad = 0;
+        var processingPads = #[80, 81];
         var onColor = 120, offColor = 122, stopBlink = 11, stopRest = 13;
-        var blinkPad = {arg midi;
-            launchPad.noteOn(0, midi, stopBlink);
+        var blinkPad = {arg midi, blinkOn, blinkOff;
+            launchPad.noteOn(0, midi, blinkOn);
             0.05.wait;
-            launchPad.noteOn(0, midi, stopRest);
+            launchPad.noteOn(0, midi, blinkOff);
         };
 
         //Bus declarations
@@ -76,6 +77,10 @@
         var subAmt = 88, offset = 16;
 
         var resetPads = {
+            processingPads.do({
+                arg val, index;
+                launchPad.noteOn(0, val, offColor);
+            });
             onPads.do({
                 arg val, index; 
                 launchPad.noteOn(0, val, if(padStates[index] == 1, {onColor}, {offColor}));
@@ -106,7 +111,7 @@
 
         s.sync;
 
-        oscProcessing = NetAddr.new("192.168.2.2", 7771); // raspi ip 192.168.2.2
+        oscProcessing = NetAddr.new("localhost", 6541); // raspi ip 192.168.2.2
         (File.getcwd +/+ "defs/synth-defs.sc").load(); //load Synth Defs
 
         ///////////////////////////////////PBINDS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
@@ -150,12 +155,18 @@
         MIDIdef.freeAll;
         MIDIFunc.cc({arg val, num;
             switch(num,
-                16, {
-                    oscProcessing.sendMsg("/terrainHeight", val);
-                    oscProcessing.sendMsg("/flySpeed", val.linlin(0,127,0,1));
-
+                0, {
                     if(leftDiabetes.isPlaying(),
                     {
+                        oscProcessing.sendMsg("/terrainFade", val.linlin(0,127,0,255).asInteger);
+                    }); 
+                },
+                16, {
+                    if(leftDiabetes.isPlaying(),
+                    {
+                        oscProcessing.sendMsg("/terrainHeight", val);
+                        oscProcessing.sendMsg("/flySpeed", val.linlin(0,127,0.0,1.0));
+
                         leftDiabetes.set(\freq,val.linexp(0,127,70,110)); 
                         leftDiabetes.set(\buf,val.linlin(0,127,5,28)); 
                         leftDiabetes.set(\velocity,val.linexp(0,127,30,120)); 
@@ -197,6 +208,12 @@
         });
 
         MIDIFunc.noteOn({arg val, num;
+            processingPads.do({
+                arg val, ind;
+                if(num == val, {
+                    fork {blinkPad.value(val, onColor, offColor);} 
+                });
+            });
             /// LIGHT UP LAUNCHPAD
             onPads.do({
                 arg val, ind;
@@ -212,7 +229,7 @@
                 if(num == val, {
                     padStates[ind] = 0;
                     launchPad.noteOn(0, num-1, offColor);
-                    fork {blinkPad.value(num);};
+                    fork {blinkPad.value(num, stopBlink, stopRest);};
                 });
             });
 
@@ -284,7 +301,13 @@
                     if(moireSynth.isPlaying(),
                         {moireSynth.free;}
                     );
-                    fork {blinkPad.value(99);};
+                    fork {blinkPad.value(99, stopBlink, stopRest);};
+                },
+                processingPads[0], {
+                    oscProcessing.sendMsg("/prevStage");
+                },
+                processingPads[1], {
+                    oscProcessing.sendMsg("/nextStage");
                 }
             );
         }, chan: 0);
@@ -325,5 +348,6 @@ s.reboot;
 s.record;
 s.stopRecording;
 s.scope;
+s.meter
 
 OSCFunc.trace(false)
