@@ -8,22 +8,24 @@
 // [0001]->[0011]->[0010]->[0110]->[0100]->[1100]->[1000]
 
 import oscP5.*;
+import java.lang.Math;
 import netP5.*;
 
 final static int TERRAIN = 1, STARS = 2, SYNCHRONIZED = 4, EARTHMOON = 8; 
 final static int [] ORDERED_STATES = {1,3,2,6,4,12,8};
 
 // OPTIONS 
-final static int PIXEL_DENSITY = 2, OSC_PORT = 6541; 
-final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = true; 
+final static int PIXEL_DENSITY = 2, OSC_PORT = 7700; 
+final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = false; 
 final static String IP = "localhost";//"192.168.2.2";
 
 OscP5 oscP5;
 NetAddress netAddr;
 int currentStageIndex = 0;
 
-int terrainOpacity = 0, starsOpacity = 0;
+int terrainOpacity = 0, starsOpacity = 0, syndOpacity = 0, earthOpacity = 0;
 Terrain movingTerrain;
+Earthmoon earthMoon;
 Stars stars;
 
 public void settings() {
@@ -42,9 +44,11 @@ void setup(){
 
     movingTerrain = new Terrain(width, height);
     stars = new Stars(width, height);
+    earthMoon = new Earthmoon(width, height);
 
     hint(DISABLE_DEPTH_TEST); //needed?
     starsOpacity = 255;//temporary
+    earthOpacity = 255;//temporary
 }
 
 Boolean first = true; //TODO remove
@@ -69,6 +73,8 @@ void draw(){
     }
 
     if(earthRunning){
+        tint(255, earthOpacity);
+        image(earthMoon.drawEarthmoon(), 0, 0);
     }
 
 }
@@ -92,7 +98,7 @@ void oscEvent(OscMessage msg){
                     terrainOpacity = msg.get(0).intValue();
                 break; 
             case "/prevStage" :
-                currentStageIndex = (currentStageIndex-1)%ORDERED_STATES.length;
+                currentStageIndex = Math.floorMod(currentStageIndex-1,ORDERED_STATES.length);
                 break;
             case "/nextStage" :
                 currentStageIndex = (currentStageIndex+1)%ORDERED_STATES.length;
