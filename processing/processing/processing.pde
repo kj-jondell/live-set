@@ -16,7 +16,6 @@ final static int [] ORDERED_STATES = {1,3,2,6,4,12,8};
 // OPTIONS 
 final static int PIXEL_DENSITY = 2, OSC_PORT = 6541; 
 final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = true; 
-final static float FLY_SCALE = 100;
 final static String IP = "localhost";//"192.168.2.2";
 
 OscP5 oscP5;
@@ -52,20 +51,24 @@ Boolean first = true; //TODO remove
 void draw(){
     background(0); //black background
     int currentStage = ORDERED_STATES[currentStageIndex];
-    if((TERRAIN&currentStage)>0){
+    Boolean terrainRunning = (TERRAIN&currentStage)>0, starsRunning = (STARS&currentStage)>0, syncRunning = (SYNCHRONIZED&currentStage)>0, earthRunning = (EARTHMOON&currentStage)>0;
+
+    if(terrainRunning){
         tint(255, terrainOpacity);
         image(movingTerrain.drawTerrain(), 0, 0);
     }
 
-    if((STARS&currentStage)>0){
+    if(starsRunning){
         tint(255, starsOpacity); //OWN OPACITY
-        image(stars.drawStars((TERRAIN&currentStage)>0? movingTerrain.getPoints() : null), 0, 0);
+        if(terrainRunning)
+            image(stars.drawStars(movingTerrain.getPoints()), 0, 0);
+        else image(stars.drawStars(), 0, 0);
     }
 
-    if((SYNCHRONIZED&currentStage)>0){
+    if(syncRunning){
     }
 
-    if((EARTHMOON&currentStage)>0){
+    if(earthRunning){
     }
 
 }
@@ -82,7 +85,7 @@ void oscEvent(OscMessage msg){
                 break; 
             case "/flySpeed" :   
                 if(msg.checkTypetag("f"))
-                    movingTerrain.setFlySpeed(msg.get(0).floatValue()/FLY_SCALE);
+                    movingTerrain.setFlySpeed(msg.get(0).floatValue());
                 break; 
             case "/terrainFade" :   
                 if(msg.checkTypetag("i"))

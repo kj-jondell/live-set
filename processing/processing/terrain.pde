@@ -1,6 +1,6 @@
 class Terrain { //TODO: extends PGraphics 
     final static int SCALE = 15;
-    float triangleOpacityFactor = 1;
+    final static float FLY_SCALE = 100;
 
     int columns, rows;
     float flying, flySpeed, tHeight;
@@ -33,7 +33,7 @@ class Terrain { //TODO: extends PGraphics
      * Helper methodfor generating terrain
      */
     private void generateTerrain(){
-        this.flying -= this.flySpeed;
+        this.flying -= this.flySpeed/FLY_SCALE;
         float yOffset = this.flying;
         for (int y=0; y < this.rows; y++) {
             float xOffset = 0;
@@ -63,7 +63,7 @@ class Terrain { //TODO: extends PGraphics
                 float opacity = map(y, 0, this.rows, 0, 255);
                 this.tGraphics.strokeWeight(1);
 
-                this.tGraphics.stroke(map(this.coordinates[x][y], 0, 100, 150, 255), 125, 255, opacity*this.triangleOpacityFactor);//LIGHTNING :random(10000)>9900?1:0.1 AND change hue..
+                this.tGraphics.stroke(map(this.coordinates[x][y], 0, 100, 150, 255)+(155*this.flySpeed), map(this.tHeight, 0, 127, 100, 255), 255, opacity);//LIGHTNING :random(10000)>9900?1:0.1 AND change hue..
 
                 PVector v1 = new PVector(x*this.SCALE, y*this.SCALE, this.coordinates[x][y]);
                 PVector v2 = new PVector(x*this.SCALE, (y+1)*this.SCALE, this.coordinates[x][y+1]);
