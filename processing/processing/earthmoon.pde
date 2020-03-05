@@ -42,7 +42,7 @@ class Earthmoon {
         this.earth.rotate(0.001,0,1,0);
 
         this.eGraphics.directionalLight(255,255,255, -1,0.25,0);
-        this.eGraphics.ambientLight(120,120,120,0,0,0);
+        this.eGraphics.ambientLight(120,120,120,0,0,0); // NEEDED ? DOES N'T WORK SEEMINGLY...
         this.eGraphics.shape(this.moon, this.eWidth/2, this.eHeight/2);
         this.eGraphics.shape(this.earth, this.eWidth/2, this.eHeight/2);
 

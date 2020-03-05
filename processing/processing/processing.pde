@@ -23,10 +23,11 @@ OscP5 oscP5;
 NetAddress netAddr;
 int currentStageIndex = 0;
 
-int terrainOpacity = 0, starsOpacity = 0, syndOpacity = 0, earthOpacity = 0;
+int terrainOpacity = 0, starsOpacity = 0, syncOpacity = 0, earthOpacity = 0;
 Terrain movingTerrain;
 Earthmoon earthMoon;
 Stars stars;
+Synchronized sync;
 
 public void settings() {
     if(!NO_FULLSCREEN) fullScreen(P3D);
@@ -45,13 +46,14 @@ void setup(){
     movingTerrain = new Terrain(width, height);
     stars = new Stars(width, height);
     earthMoon = new Earthmoon(width, height);
+    sync = new Synchronized(width, height);
 
     hint(DISABLE_DEPTH_TEST); //needed?
     starsOpacity = 255;//temporary
     earthOpacity = 255;//temporary
+    syncOpacity = 255;//temporary
 }
 
-Boolean first = true; //TODO remove
 void draw(){
     background(0); //black background
     int currentStage = ORDERED_STATES[currentStageIndex];
@@ -63,13 +65,15 @@ void draw(){
     }
 
     if(starsRunning){
-        tint(255, starsOpacity); //OWN OPACITY
+        tint(255, starsOpacity); //change hue....
         if(terrainRunning)
             image(stars.drawStars(movingTerrain.getPoints()), 0, 0);
         else image(stars.drawStars(), 0, 0);
     }
 
     if(syncRunning){
+        tint(255, syncOpacity);
+        image(sync.drawSynchronized(), 0, 0);
     }
 
     if(earthRunning){
