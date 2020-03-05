@@ -76,11 +76,20 @@ class Terrain { //TODO: extends PGraphics
 
         for (PVector v : this.points){
             this.tGraphics.strokeWeight(2);
+            this.tGraphics.stroke(255);
             this.tGraphics.point(v.x, v.y, v.z);
         }
 
         this.tGraphics.endDraw();
         return this.tGraphics;
+    }
+
+    void setFlySpeed(float flySpeed){
+        this.flySpeed = flySpeed;
+    }
+
+    void setTerrainHeight(float terrainHeight){
+        this.terrainHeight = terrainHeight;
     }
 
     /*
