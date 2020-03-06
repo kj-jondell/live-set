@@ -125,6 +125,10 @@ void oscEvent(OscMessage msg){
                 if(msg.checkTypetag("i"))
                     stars.setNewAngle(map(((float)msg.get(0).intValue()), 0, 127, -0.01, 0.03));
                 break;
+            case "/earthTransition" :
+                if(msg.checkTypetag("i"))
+                    earthOpacity = (int)map(msg.get(0).intValue(), 0, 80, 0,255);
+                break;
         }
         //FOR DEBUGGING
         //println(terrainOpacity); 
