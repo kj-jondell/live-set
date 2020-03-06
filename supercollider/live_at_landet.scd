@@ -124,7 +124,7 @@
                slices.mirror[offset..(offset+subAmt)].choose.bufnum;
            }),
            \dur, Pfunc({durations.wchoose(choices[0..durations.size-1].normalizeSum);}),
-           \bla, Pfunc { |e| oscProcessing.sendMsg("/dur", e[\rate] ) },
+           \triggered, Pfunc { |e| oscProcessing.sendMsg("/triggered", e[\rate] ) },
            \add, Pfunc { fork{
                0.1.wait;
                if(harshNoise.isPlaying(),{
@@ -161,6 +161,12 @@
                         oscProcessing.sendMsg("/terrainFade", val.linlin(0,127,0,255).asInteger);
                     }); 
                 },
+                4, {
+                    if(harshNoise.isPlaying(),
+                    {
+                        oscProcessing.sendMsg("/starsTransition", val);
+                    }); 
+                },
                 16, {
                     if(leftDiabetes.isPlaying(),
                     {
@@ -183,9 +189,15 @@
                     }
                     );
                 },
+                17, {
+                    oscProcessing.sendMsg("/moireAngle", val);
+                },
                 18, {
                     if(moireBassSynth.isPlaying(),
-                        {moireBassSynth.set(\detune, val.linlin(0,127,1,5));}
+                        {
+                            moireBassSynth.set(\detune, val.linlin(0,127,1,5));
+                            oscProcessing.sendMsg("/starHue", val);
+                        }
                     );
                     if(moireSynth.isPlaying(),
                         {moireSynth.set(\detune, val.linlin(0,127,1,5));}

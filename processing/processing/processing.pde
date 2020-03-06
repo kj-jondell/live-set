@@ -16,7 +16,7 @@ final static int [] ORDERED_STATES = {1,3,2,6,4,/*12,*/8}; //JUMP STRAIGHT TO EA
 
 // OPTIONS 
 final static int PIXEL_DENSITY = 1, OSC_PORT = 7700; 
-final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = true; 
+final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = false; 
 final static String IP = "localhost"; //"192.168.2.2"
 
 OscP5 oscP5;

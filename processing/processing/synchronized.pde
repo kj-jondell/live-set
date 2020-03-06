@@ -1,5 +1,5 @@
 class Synchronized {
-    private final static int MOON_SIZE = 24;
+    private final static int MOON_SIZE = 50;
 
     float y = height/2, x = width/2;
     float rotation = 0;
