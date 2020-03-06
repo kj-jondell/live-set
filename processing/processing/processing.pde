@@ -15,9 +15,9 @@ final static int TERRAIN = 1, STARS = 2, SYNCHRONIZED = 4, EARTHMOON = 8;
 final static int [] ORDERED_STATES = {1,3,2,6,4,12,8};
 
 // OPTIONS 
-final static int PIXEL_DENSITY = 2, OSC_PORT = 7700; 
+final static int PIXEL_DENSITY = 1, OSC_PORT = 7700; 
 final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = false; 
-final static String IP = "localhost";//"192.168.2.2";
+final static String IP = "192.168.2.2";
 
 OscP5 oscP5;
 NetAddress netAddr;
@@ -37,6 +37,7 @@ public void settings() {
 
 void setup(){
     noCursor();
+    frameRate(25);
 
     if(OSC_ENABLED){
         oscP5 = new OscP5(this, OSC_PORT);
