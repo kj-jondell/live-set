@@ -12,18 +12,19 @@ import java.lang.Math;
 import netP5.*;
 
 final static int TERRAIN = 1, STARS = 2, SYNCHRONIZED = 4, EARTHMOON = 8; 
-final static int [] ORDERED_STATES = {1,3,2,6,4,12,8};
+final static int [] ORDERED_STATES = {1,3,2,6,4,/*12,*/8}; //JUMP STRAIGHT TO EARTHMOON
 
 // OPTIONS 
 final static int PIXEL_DENSITY = 1, OSC_PORT = 7700; 
-final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = false; 
-final static String IP = "192.168.2.2";
+final static Boolean OSC_ENABLED = true, NO_FULLSCREEN = true; 
+final static String IP = "localhost"; //"192.168.2.2"
 
 OscP5 oscP5;
 NetAddress netAddr;
 int currentStageIndex = 0;
 
 int terrainOpacity = 0, starsOpacity = 0, syncOpacity = 0, earthOpacity = 0;
+float starHue = 0.0;
 Terrain movingTerrain;
 Earthmoon earthMoon;
 Stars stars;
@@ -41,7 +42,7 @@ void setup(){
 
     if(OSC_ENABLED){
         oscP5 = new OscP5(this, OSC_PORT);
-        netAddr = new NetAddress("localhost", OSC_PORT);//raspi ip 192.168.2.2
+        netAddr = new NetAddress(IP, OSC_PORT);//raspi ip 192.168.2.2
     }
 
     movingTerrain = new Terrain(width, height);
@@ -52,7 +53,6 @@ void setup(){
     hint(DISABLE_DEPTH_TEST); //needed?
     starsOpacity = 255;//temporary
     earthOpacity = 255;//temporary
-    syncOpacity = 255;//temporary
 }
 
 void draw(){
@@ -66,14 +66,14 @@ void draw(){
     }
 
     if(starsRunning){
-        tint(255, starsOpacity); //change hue....
+        tint(lerpColor(Stars.STAR_COLOR, Stars.STAR_HUE, constrain(starHue,0,1)), starsOpacity); //change hue....
         if(terrainRunning)
             image(stars.drawStars(movingTerrain.getPoints()), 0, 0);
         else image(stars.drawStars(), 0, 0);
     }
 
     if(syncRunning){
-        tint(255, syncOpacity);
+        tint(255, currentStage == SYNCHRONIZED ? 255 : syncOpacity);
         image(sync.drawSynchronized(), 0, 0);
     }
 
@@ -107,6 +107,23 @@ void oscEvent(OscMessage msg){
                 break;
             case "/nextStage" :
                 currentStageIndex = (currentStageIndex+1)%ORDERED_STATES.length;
+                break;
+            case "/triggered" :
+                sync.moveMoon();
+                break;
+            case "/starHue" :
+                if(msg.checkTypetag("i"))
+                    starHue = map(((float)msg.get(0).intValue()), 0, 127, 0, 1);
+                break;
+            case "/starsTransition":
+                if(msg.checkTypetag("i") && ORDERED_STATES[currentStageIndex] == STARS + SYNCHRONIZED){
+                    starsOpacity = (int)map(msg.get(0).intValue(), 0, 64, 255, 0);
+                    syncOpacity = (int)map(msg.get(0).intValue(), 0, 64, 0, 255);
+                }
+                break;
+            case "/moireAngle" :
+                if(msg.checkTypetag("i"))
+                    stars.setNewAngle(map(((float)msg.get(0).intValue()), 0, 127, -0.01, 0.03));
                 break;
         }
         //FOR DEBUGGING

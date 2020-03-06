@@ -1,13 +1,12 @@
 class Stars {
 
-    private final static color STAR_COLOR = #FFFFFF;
-    private final static float AMT_LEVELS = 1;
+    public final static color STAR_COLOR = #FFFFFF;
+    public final static color STAR_HUE = #d1001c;
 
     PGraphics sGraphics;
     ArrayList<TPoint> stars;
 
-    //float alpha= 0, alpha_incr=0.5, AMT_LEVELS = 50, incr = 0.01;
-    //int pixelScalar = 1, amtDots = 1000;
+    float newAngle = 0.0;
 
     Stars(int sWidth, int sHeight){
         sGraphics = createGraphics(sWidth, sHeight, P3D);
@@ -45,9 +44,9 @@ class Stars {
             p.x -= width/2;
             //OPTIMIZE THIS (not necessary with so many levels for points close to origin of rotation
 
-            float new_a = -0.015;//PI/3;
-            float new_y = (p.y*cos(new_a) - p.x*sin(new_a))*0.99; 
-            float new_x = (p.y*sin(new_a) + p.x*cos(new_a))*0.99;
+            //float new_a = -0.015;//PI/3;
+            float new_y = (p.y*cos(this.newAngle) - p.x*sin(this.newAngle))*0.99; 
+            float new_x = (p.y*sin(this.newAngle) + p.x*cos(this.newAngle))*0.99;
             float new_z = p.z*0.95;
 
             new_y += height/2;
@@ -62,6 +61,10 @@ class Stars {
 
             ind++;
         }
+    }
+
+    void setNewAngle(float newAngle){
+        this.newAngle = newAngle;
     }
 
     private void generatePixel(){
