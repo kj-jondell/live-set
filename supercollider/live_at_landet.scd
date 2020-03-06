@@ -111,7 +111,7 @@
 
         s.sync;
 
-        oscProcessing = NetAddr.new("localhost", 6541); // raspi ip 192.168.2.2
+        oscProcessing = NetAddr.new("localhost", 7700); // raspi ip 192.168.2.2
         (File.getcwd +/+ "defs/synth-defs.sc").load(); //load Synth Defs
 
         ///////////////////////////////////PBINDS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 
