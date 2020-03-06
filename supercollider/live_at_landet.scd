@@ -167,6 +167,9 @@
                         oscProcessing.sendMsg("/starsTransition", val);
                     }); 
                 },
+                7, {
+                    oscProcessing.sendMsg("/earthTransition", val);
+                },
                 16, {
                     if(leftDiabetes.isPlaying(),
                     {
@@ -178,45 +181,43 @@
                         leftDiabetes.set(\velocity,val.linexp(0,127,30,120)); 
                         leftDiabetes.set(\detuneFactor, val.linlin(0,127,0.7,0));
                     }
-                    );
+                );
 
-                    if(rightDiabetes.isPlaying(),
-                    {
-                        rightDiabetes.set(\detuneFactor, val.linlin(0,127,0.6,0));
-                        rightDiabetes.set(\velocity,val.linexp(0,127,25,120)); 
-                        rightDiabetes.set(\freq,val.linexp(0,127,80,110)); 
-                        rightDiabetes.set(\buf,val.linlin(0,127,0,28)); 
-                    }
-                    );
-                },
-                17, {
-                    oscProcessing.sendMsg("/moireAngle", val);
-                },
-                18, {
-                    if(moireBassSynth.isPlaying(),
-                        {
-                            moireBassSynth.set(\detune, val.linlin(0,127,1,5));
-                            oscProcessing.sendMsg("/starHue", val);
-                        }
-                    );
-                    if(moireSynth.isPlaying(),
-                        {moireSynth.set(\detune, val.linlin(0,127,1,5));}
-                    );
-                    if(harshNoise.isPlaying(),
-                        {harshNoise.set(\midi_gate_level, val.linlin(0,127,0.25,-0.25));}  
-                    );
-                },
-                20, {
-                    if(Pbindef(\sequencer).isPlaying(),{
-                        subAmt = val.linlin(0,127,0,slices.size).asInteger();
-                    });
-                },
-                21, {
-                    if(Pbindef(\sequencer).isPlaying(),{
-                        offset = val.linlin(0,127,0,slices.size).asInteger();
-                    });
+                if(rightDiabetes.isPlaying(),
+                {
+                    rightDiabetes.set(\detuneFactor, val.linlin(0,127,0.6,0));
+                    rightDiabetes.set(\velocity,val.linexp(0,127,25,120)); 
+                    rightDiabetes.set(\freq,val.linexp(0,127,80,110)); 
+                    rightDiabetes.set(\buf,val.linlin(0,127,0,28)); 
                 }
             );
+        },
+        17, {
+            oscProcessing.sendMsg("/moireAngle", val);
+        },
+        18, {
+            if(moireBassSynth.isPlaying(),
+            {
+                moireBassSynth.set(\detune, val.linlin(0,127,1,5));
+                oscProcessing.sendMsg("/starHue", val);
+            }
+        );
+        if(moireSynth.isPlaying(),
+        {moireSynth.set(\detune, val.linlin(0,127,1,5));});
+        if(harshNoise.isPlaying(),
+        {harshNoise.set(\midi_gate_level, val.linlin(0,127,0.25,-0.25));});
+    },
+    20, {
+        if(Pbindef(\sequencer).isPlaying(),{
+            subAmt = val.linlin(0,127,0,slices.size).asInteger();
+        });
+    },
+    21, {
+        if(Pbindef(\sequencer).isPlaying(),{
+            offset = val.linlin(0,127,0,slices.size).asInteger();
+        });
+    }
+);
         });
 
         MIDIFunc.noteOn({arg val, num;
@@ -271,49 +272,49 @@
                 onPads[0], { //64
                     //DIABETES SYNTH
                     if(leftDiabetes.isPlaying() == false,
-                       {leftDiabetes = Synth.new(\diabetes, [\velocity, 10, \pan, diabetesLeftBus, \freq, 70,\buf, 5, \detuneFactor, 1.0]).register(true);}
-                    );
-                    if(rightDiabetes.isPlaying() == false,
-                        {rightDiabetes = Synth.new(\diabetes, [\velocity, 10, \freq, 80, \buf, 0, \pan, diabetesRightBus, \detuneFactor, 0.9]).register(true);}
-                    );
-                },
-                offPads[0], {//65
-                    if(leftDiabetes.isPlaying(),
-                        {leftDiabetes.free;}
-                    );
-                    if(rightDiabetes.isPlaying(),
-                        {rightDiabetes.free;}
-                    );
-                   //TRIGGER OSC SHIFT OF SCENE
-                },
-                onPads[1], {
-                    if(harshNoise.isPlaying() == false,
-                        {harshNoise = Synth(\gatedBuffer, [ \bufnum, harshBuffer, \out_buffer, harshBus]).register(true);}
-                    );
+                    {leftDiabetes = Synth.new(\diabetes, [\velocity, 10, \pan, diabetesLeftBus, \freq, 70,\buf, 5, \detuneFactor, 1.0]).register(true);}
+                );
+                if(rightDiabetes.isPlaying() == false,
+                {rightDiabetes = Synth.new(\diabetes, [\velocity, 10, \freq, 80, \buf, 0, \pan, diabetesRightBus, \detuneFactor, 0.9]).register(true);}
+            );
+        },
+        offPads[0], {//65
+            if(leftDiabetes.isPlaying(),
+            {leftDiabetes.free;}
+        );
+        if(rightDiabetes.isPlaying(),
+        {rightDiabetes.free;}
+    );
+    //TRIGGER OSC SHIFT OF SCENE
+},
+onPads[1], {
+    if(harshNoise.isPlaying() == false,
+    {harshNoise = Synth(\gatedBuffer, [ \bufnum, harshBuffer, \out_buffer, harshBus]).register(true);}
+);
                 },
                 offPads[1], {
                     if(harshNoise.isPlaying(),
-                        {harshNoise.free;}
-                    );
-                },
-                onPads[2], {
-                    if(Pbindef(\sequencer).isPlaying() == false,
-                        {Pbindef(\sequencer).play(quant:0);}
-                    );
-                },
-                offPads[2], {
-                    if(Pbindef(\sequencer).isPlaying(),
-                        {Pbindef(\sequencer).pause;}
-                    );
-                }, 
-                99, {
-                    if(moireBassSynth.isPlaying(),
-                        {moireBassSynth.free;}
-                    );
-                    if(moireSynth.isPlaying(),
-                        {moireSynth.free;}
-                    );
-                    fork {blinkPad.value(99, stopBlink, stopRest);};
+                    {harshNoise.free;}
+                );
+            },
+            onPads[2], {
+                if(Pbindef(\sequencer).isPlaying() == false,
+                {Pbindef(\sequencer).play(quant:0);}
+            );
+        },
+        offPads[2], {
+            if(Pbindef(\sequencer).isPlaying(),
+            {Pbindef(\sequencer).pause;}
+        );
+    }, 
+    99, {
+        if(moireBassSynth.isPlaying(),
+        {moireBassSynth.free;}
+    );
+    if(moireSynth.isPlaying(),
+    {moireSynth.free;}
+);
+fork {blinkPad.value(99, stopBlink, stopRest);};
                 },
                 processingPads[0], {
                     oscProcessing.sendMsg("/prevStage");
